@@ -19,7 +19,7 @@ func main() {
 		B: 2,
 		C: "string",
 	}
-	ch, _ := channel.NewChannel[T]("", ":9091")
+	ch, _ := rpchan.NewChannel[T](":9091")
 	for range ticker.C {
 		fmt.Println(ch.Send(&t))
 	}

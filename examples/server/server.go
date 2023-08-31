@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	channel "github.com/lucafmarques/rpchan"
+	"github.com/lucafmarques/rpchan"
 )
 
 type T struct {
@@ -12,10 +12,7 @@ type T struct {
 }
 
 func main() {
-	ch, err := channel.NewChannel[T]("", ":9091", 1)
-	if err != nil {
-		panic(err)
-	}
+	ch, _ := rpchan.NewChannel[T](":9091", 100)
 	for {
 		v, ok := ch.Receive()
 		fmt.Printf("%+v - %v\n", v, ok)

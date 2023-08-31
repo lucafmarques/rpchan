@@ -1,4 +1,4 @@
-package channel
+package rpchan
 
 import (
 	"net"
@@ -9,11 +9,11 @@ import (
 )
 
 type rpchan[T any] struct {
-	address, port string
-	setupC        func()
-	setupR        func()
-	client        *rpc.Client
-	receiver      *receiver.Receiver[T]
+	addr     string
+	setupC   func()
+	setupR   func()
+	client   *rpc.Client
+	receiver *receiver.Receiver[T]
 }
 
 func (ch *rpchan[T]) Send(v any) error {
@@ -27,18 +27,15 @@ func (ch *rpchan[T]) Receive() (*T, bool) {
 	return v, ok
 }
 
-func NewChannel[T any](address, port string, buf ...uint) (*rpchan[T], error) {
+func NewChannel[T any](addr string, buf ...uint) (*rpchan[T], error) {
 	var bufsize uint
 	if len(buf) > 0 {
 		bufsize = buf[0]
 	}
-	ch := &rpchan[T]{
-		address: address,
-		port:    port,
-	}
+	ch := &rpchan[T]{addr: addr}
 
 	ch.setupC = sync.OnceFunc(func() {
-		cli, err := rpc.Dial("tcp", address+port)
+		cli, err := rpc.Dial("tcp", addr)
 		if err != nil {
 			panic(err)
 		}
@@ -50,7 +47,7 @@ func NewChannel[T any](address, port string, buf ...uint) (*rpchan[T], error) {
 		srv := rpc.NewServer()
 		rec := receiver.NewReceiver[T](bufsize)
 
-		list, err := net.Listen("tcp", address+port)
+		list, err := net.Listen("tcp", addr)
 		if err != nil {
 			panic(err)
 		}
