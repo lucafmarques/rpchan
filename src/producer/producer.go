@@ -1,4 +1,4 @@
-package rpc_queue
+package producer
 
 import (
 	"net/rpc"

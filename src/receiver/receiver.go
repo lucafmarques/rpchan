@@ -1,4 +1,4 @@
-package rpc_queue
+package receiver
 
 import (
 	"context"
