@@ -1,6 +1,6 @@
-# rpc-channel
+# rpchan
 
-`rpc-channel` implements some of Go's channels semantics over a TCP connection using `net/rpc`.
+`rpchan` implements some of Go's channels semantics over a TCP connection using `net/rpc`.
 
 It achieves this by providing a very minimal API, consisting of only two functions, `Send` and `Listen`.
 

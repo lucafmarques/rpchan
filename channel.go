@@ -6,7 +6,7 @@ import (
 	"net/rpc"
 	"sync"
 
-	"github.com/lucafmarques/rpc-channel/receiver"
+	"github.com/lucafmarques/rpchan/receiver"
 )
 
 var client *rpc.Client

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/lucafmarques/rpc-channel"
+	"github.com/lucafmarques/rpchan"
 )
 
 type T struct {
