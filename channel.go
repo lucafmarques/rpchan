@@ -5,7 +5,7 @@ import (
 	"net/rpc"
 	"sync"
 
-	receiver "github.com/lucafmarques/rpchan/internal"
+	"github.com/lucafmarques/rpchan/internal"
 )
 
 type rpchan[T any] struct {
@@ -13,7 +13,7 @@ type rpchan[T any] struct {
 	setupC   func()
 	setupR   func()
 	client   *rpc.Client
-	receiver *receiver.Receiver[T]
+	receiver *internal.Receiver[T]
 }
 
 func (ch *rpchan[T]) Send(v any) error {
@@ -48,7 +48,7 @@ func New[T any](addr string, buf ...uint) (*rpchan[T], error) {
 	})
 	ch.setupR = sync.OnceFunc(func() {
 		srv := rpc.NewServer()
-		rec := receiver.NewReceiver[T](bufsize)
+		rec := internal.NewReceiver[T](bufsize)
 		srv.RegisterName("Channel", rec)
 
 		list, err := net.Listen("tcp", addr)
