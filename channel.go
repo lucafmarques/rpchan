@@ -1,4 +1,4 @@
-package queue
+package channel
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"net/rpc"
 	"sync"
 
-	"github.com/lucafmarques/rpc-queue/receiver"
+	"github.com/lucafmarques/rpc-channel/receiver"
 )
 
 var client *rpc.Client
@@ -18,11 +18,13 @@ var setup = sync.OnceFunc(func() {
 	}
 })
 
+// Send calls the Channel.Send RPC to write to the listener's channel.
 func Send(t any) error {
 	setup()
-	return client.Call("Queue.Push", t, nil)
+	return client.Call("Channel.Send", t, nil)
 }
 
+// Listen returns the underlying channel that holds the data received via the RPC's.
 func Listen[T any](ctx context.Context, buf uint) <-chan *T {
 	srv := rpc.NewServer()
 	rec := receiver.NewReceiver[T](buf)
@@ -31,7 +33,7 @@ func Listen[T any](ctx context.Context, buf uint) <-chan *T {
 	if err != nil {
 		panic(err)
 	}
-	if err := srv.RegisterName("Queue", rec); err != nil {
+	if err := srv.RegisterName("Channel", rec); err != nil {
 		panic(err)
 	}
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/lucafmarques/rpc-queue"
+	"github.com/lucafmarques/rpc-channel"
 )
 
 type T struct {
@@ -15,7 +15,7 @@ type T struct {
 
 func main() {
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*10)
-	for v := range queue.Listen[T](ctx, 1) {
+	for v := range channel.Listen[T](ctx, 1) {
 		fmt.Printf("%+v\n", v)
 	}
 }

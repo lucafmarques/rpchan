@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/lucafmarques/rpc-queue"
+	"github.com/lucafmarques/rpc-channel"
 )
 
 type T struct {
@@ -20,6 +20,6 @@ func main() {
 	}
 	ticker := time.NewTicker(time.Millisecond * 100)
 	for range ticker.C {
-		fmt.Println(queue.Send(&t))
+		fmt.Println(channel.Send(&t))
 	}
 }
