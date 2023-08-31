@@ -25,6 +25,8 @@ func Send(t any) error {
 }
 
 // Receive returns the underlying channel that holds the data received via the RPC's.
+// This differs semantically from a channel receive, but it provides a better API
+// for callers to work with the data being received.
 func Receive[T any](ctx context.Context, buf uint) <-chan *T {
 	srv := rpc.NewServer()
 	rec := receiver.NewReceiver[T](buf)
