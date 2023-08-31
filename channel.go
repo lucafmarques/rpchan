@@ -49,12 +49,10 @@ func New[T any](addr string, buf ...uint) (*rpchan[T], error) {
 	ch.setupR = sync.OnceFunc(func() {
 		srv := rpc.NewServer()
 		rec := receiver.NewReceiver[T](bufsize)
+		srv.RegisterName("Channel", rec)
 
 		list, err := net.Listen("tcp", addr)
 		if err != nil {
-			panic(err)
-		}
-		if err := srv.RegisterName("Channel", rec); err != nil {
 			panic(err)
 		}
 
