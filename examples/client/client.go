@@ -13,13 +13,14 @@ type T struct {
 }
 
 func main() {
+	ticker := time.NewTicker(time.Millisecond * 100)
 	t := T{
 		A: 1,
 		B: 2,
 		C: "string",
 	}
-	ticker := time.NewTicker(time.Millisecond * 100)
+	ch, _ := rpchan.New[T](":9091")
 	for range ticker.C {
-		fmt.Println(channel.Send(&t))
+		fmt.Println(ch.Send(&t))
 	}
 }
