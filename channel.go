@@ -24,8 +24,8 @@ func Send(t any) error {
 	return client.Call("Channel.Send", t, nil)
 }
 
-// Listen returns the underlying channel that holds the data received via the RPC's.
-func Listen[T any](ctx context.Context, buf uint) <-chan *T {
+// Receive returns the underlying channel that holds the data received via the RPC's.
+func Receive[T any](ctx context.Context, buf uint) <-chan *T {
 	srv := rpc.NewServer()
 	rec := receiver.NewReceiver[T](buf)
 
@@ -43,5 +43,5 @@ func Listen[T any](ctx context.Context, buf uint) <-chan *T {
 		rec.Close()
 	}()
 
-	return rec.Listen()
+	return rec.Channel()
 }

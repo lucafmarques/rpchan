@@ -23,5 +23,5 @@ func (r *Receiver[T]) Send(item *T, ok *bool) error {
 	return err
 }
 
-func (r Receiver[T]) Close()          { close(r.channel) }
-func (r Receiver[T]) Listen() chan *T { return r.channel }
+func (r Receiver[T]) Close()           { close(r.channel) }
+func (r Receiver[T]) Channel() chan *T { return r.channel }
