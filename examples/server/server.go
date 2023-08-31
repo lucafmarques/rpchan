@@ -12,7 +12,7 @@ type T struct {
 }
 
 func main() {
-	ch, _ := rpchan.NewChannel[T](":9091", 100)
+	ch, _ := rpchan.New[T](":9091", 100)
 	for {
 		v, ok := ch.Receive()
 		fmt.Printf("%+v - %v\n", v, ok)

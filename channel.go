@@ -27,7 +27,7 @@ func (ch *rpchan[T]) Receive() (*T, bool) {
 	return v, ok
 }
 
-func NewChannel[T any](addr string, buf ...uint) (*rpchan[T], error) {
+func New[T any](addr string, buf ...uint) (*rpchan[T], error) {
 	var bufsize uint
 	if len(buf) > 0 {
 		bufsize = buf[0]
