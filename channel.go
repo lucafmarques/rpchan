@@ -1,49 +1,70 @@
 package channel
 
 import (
-	"context"
 	"net"
 	"net/rpc"
 	"sync"
 
-	"github.com/lucafmarques/rpchan/internal"
+	receiver "github.com/lucafmarques/rpchan/internal"
 )
 
-var client *rpc.Client
-
-var setup = sync.OnceFunc(func() {
-	var err error
-	if client, err = rpc.Dial("tcp", ":9091"); err != nil {
-		panic(err)
-	}
-})
-
-// Send calls the Channel.Send RPC to write to the listener's channel.
-func Send(t any) error {
-	setup()
-	return client.Call("Channel.Send", t, nil)
+type rpchan[T any] struct {
+	address, port string
+	setupC        func()
+	setupR        func()
+	client        *rpc.Client
+	receiver      *receiver.Receiver[T]
 }
 
-// Receive returns the underlying channel that holds the data received via the RPC's.
-// This differs semantically from a channel receive, but it provides a better API
-// for callers to work with the data being received.
-func Receive[T any](ctx context.Context, buf uint) <-chan *T {
-	srv := rpc.NewServer()
-	rec := receiver.NewReceiver[T](buf)
+func (ch *rpchan[T]) Send(v any) error {
+	ch.setupC()
+	return ch.client.Call("Channel.Send", v, nil)
+}
 
-	list, err := net.Listen("tcp", ":9091")
-	if err != nil {
-		panic(err)
+func (ch *rpchan[T]) Receive() (*T, bool) {
+	ch.setupR()
+	v, ok := <-ch.receiver.Channel()
+	return v, ok
+}
+
+func NewChannel[T any](address, port string, buf ...uint) (*rpchan[T], error) {
+	var bufsize uint
+	if len(buf) > 0 {
+		bufsize = buf[0]
 	}
-	if err := srv.RegisterName("Channel", rec); err != nil {
-		panic(err)
+	ch := &rpchan[T]{
+		address: address,
+		port:    port,
 	}
 
-	go srv.Accept(list)
-	go func() {
-		<-ctx.Done()
-		rec.Close()
-	}()
+	ch.setupC = sync.OnceFunc(func() {
+		cli, err := rpc.Dial("tcp", address+port)
+		if err != nil {
+			panic(err)
+		}
 
-	return rec.Channel()
+		ch.client = cli
+	})
+
+	ch.setupR = sync.OnceFunc(func() {
+		srv := rpc.NewServer()
+		rec := receiver.NewReceiver[T](bufsize)
+
+		list, err := net.Listen("tcp", address+port)
+		if err != nil {
+			panic(err)
+		}
+		if err := srv.RegisterName("Channel", rec); err != nil {
+			panic(err)
+		}
+
+		go func() {
+			srv.Accept(list)
+			rec.Close()
+		}()
+
+		ch.receiver = rec
+	})
+
+	return ch, nil
 }
