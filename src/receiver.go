@@ -1,4 +1,4 @@
-package main
+package rpc_queue
 
 import (
 	"context"
