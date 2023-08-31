@@ -27,13 +27,18 @@ func (ch *rpchan[T]) Receive() (*T, bool) {
 	return v, ok
 }
 
+func (ch *rpchan[T]) Iter() <-chan *T {
+	ch.setupR()
+	return ch.receiver.Channel()
+}
+
 func New[T any](addr string, buf ...uint) (*rpchan[T], error) {
 	var bufsize uint
 	if len(buf) > 0 {
 		bufsize = buf[0]
 	}
-	ch := &rpchan[T]{addr: addr}
 
+	ch := &rpchan[T]{addr: addr}
 	ch.setupC = sync.OnceFunc(func() {
 		cli, err := rpc.Dial("tcp", addr)
 		if err != nil {
@@ -42,7 +47,6 @@ func New[T any](addr string, buf ...uint) (*rpchan[T], error) {
 
 		ch.client = cli
 	})
-
 	ch.setupR = sync.OnceFunc(func() {
 		srv := rpc.NewServer()
 		rec := receiver.NewReceiver[T](bufsize)
