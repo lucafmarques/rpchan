@@ -22,8 +22,7 @@ func (ch *rpchan[T]) Send(v any) error {
 }
 
 func (ch *rpchan[T]) Receive() (*T, bool) {
-	ch.setupR()
-	v, ok := <-ch.receiver.Channel()
+	v, ok := <-ch.Iter()
 	return v, ok
 }
 
