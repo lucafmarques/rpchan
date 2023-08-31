@@ -13,7 +13,7 @@ var client *rpc.Client
 
 var setup = sync.OnceFunc(func() {
 	var err error
-	if client, err = rpc.Dial("tcp", "localhost:9091"); err != nil {
+	if client, err = rpc.Dial("tcp", ":9091"); err != nil {
 		panic(err)
 	}
 })
