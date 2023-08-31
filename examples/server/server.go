@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/lucafmarques/rpc-queue/queue"
+	"github.com/lucafmarques/rpc-queue"
 )
 
 type T struct {
