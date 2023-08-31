@@ -13,35 +13,33 @@ var client *rpc.Client
 
 var setup = sync.OnceFunc(func() {
 	var err error
-	client, err = rpc.Dial("tcp", "localhost:9091")
-	if err != nil {
+	if client, err = rpc.Dial("tcp", "localhost:9091"); err != nil {
 		panic(err)
 	}
 })
 
 func Send(t any) error {
 	setup()
-	return client.Call("Queue.Receive", t, nil)
+	return client.Call("Queue.Push", t, nil)
 }
 
-func Listen[T any](ctx context.Context) <-chan *T {
-	rec := &receiver.Receiver[T]{Queue: make(chan *T)}
+func Listen[T any](ctx context.Context, buf uint) <-chan *T {
 	srv := rpc.NewServer()
+	rec := receiver.NewReceiver[T](buf)
+
 	list, err := net.Listen("tcp", ":9091")
 	if err != nil {
 		panic(err)
 	}
+	if err := srv.RegisterName("Queue", rec); err != nil {
+		panic(err)
+	}
 
+	go srv.Accept(list)
 	go func() {
-		err := srv.RegisterName("Queue", rec)
-		if err != nil {
-			panic(err)
-		}
-		go srv.Accept(list)
-
 		<-ctx.Done()
-		close(rec.Queue)
+		rec.Stop()
 	}()
 
-	return rec.Queue
+	return rec.Listen()
 }
