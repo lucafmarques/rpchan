@@ -6,7 +6,7 @@ import (
 	"net/rpc"
 	"sync"
 
-	"github.com/lucafmarques/rpc-queue/internal/receiver"
+	"github.com/lucafmarques/rpc-queue/receiver"
 )
 
 var client *rpc.Client
@@ -38,7 +38,7 @@ func Listen[T any](ctx context.Context, buf uint) <-chan *T {
 	go srv.Accept(list)
 	go func() {
 		<-ctx.Done()
-		rec.Stop()
+		rec.Close()
 	}()
 
 	return rec.Listen()
