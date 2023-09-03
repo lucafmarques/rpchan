@@ -19,7 +19,7 @@ func main() {
 		B: 2,
 		C: "string",
 	}
-	ch, _ := rpchan.New[T](":9091")
+	ch := rpchan.New[T](":9091")
 	for range ticker.C {
 		fmt.Println(ch.Send(&t))
 	}

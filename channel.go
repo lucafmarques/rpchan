@@ -1,3 +1,4 @@
+// Package rpchan implements Go's channel semantics over a TCP connection using net/rpc.
 package rpchan
 
 import (
@@ -8,7 +9,8 @@ import (
 	"github.com/lucafmarques/rpchan/internal"
 )
 
-type rpchan[T any] struct {
+// RPChan
+type RPChan[T any] struct {
 	addr     string
 	setupC   func()
 	setupR   func()
@@ -16,28 +18,49 @@ type rpchan[T any] struct {
 	receiver *internal.Receiver[T]
 }
 
-func (ch *rpchan[T]) Send(v any) error {
+// Send imitates a Go channels' send operation, but on an [RPChan].
+//
+//	ch <- "value"
+//	err := rpchan.Send("value")
+//
+// Since Send involves a network call, it can return an error.
+// A call to Send, much like sending over a Go channel, may block.
+func (ch *RPChan[T]) Send(v any) error {
 	ch.setupC()
 	return ch.client.Call("Channel.Send", v, nil)
 }
 
-func (ch *rpchan[T]) Receive() (*T, bool) {
+// Receive imitates a Go channels' receive operation, but on an [RPChan].
+//
+//	v, ok := <- ch
+//	v, ok = rpchan.Receive()
+//
+// A call to Receive, much like receiving over a Go channel, may block.
+func (ch *RPChan[T]) Receive() (*T, bool) {
 	v, ok := <-ch.Iter()
 	return v, ok
 }
 
-func (ch *rpchan[T]) Iter() <-chan *T {
+// Iter returns the underlying channel of type *T.
+// Iter is a convenience method for iteration over an [RPChan].
+//
+//	for v := range rpchan.Iter() {
+//		doSomething(v)
+//	}
+func (ch *RPChan[T]) Iter() <-chan *T {
 	ch.setupR()
 	return ch.receiver.Channel()
 }
 
-func New[T any](addr string, buf ...uint) (*rpchan[T], error) {
+// New creates an RPChan[T], with an optional bufferSize, over
+// addr and returns a reference to it.
+func New[T any](addr string, buf ...uint) *RPChan[T] {
 	var bufsize uint
 	if len(buf) > 0 {
 		bufsize = buf[0]
 	}
 
-	ch := &rpchan[T]{addr: addr}
+	ch := &RPChan[T]{addr: addr}
 	ch.setupC = sync.OnceFunc(func() {
 		cli, err := rpc.Dial("tcp", addr)
 		if err != nil {
@@ -64,5 +87,5 @@ func New[T any](addr string, buf ...uint) (*rpchan[T], error) {
 		ch.receiver = rec
 	})
 
-	return ch, nil
+	return ch
 }
