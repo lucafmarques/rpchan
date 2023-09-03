@@ -54,6 +54,9 @@ func (ch *RPChan[T]) Iter() <-chan *T {
 
 // New creates an RPChan[T], with an optional bufferSize, over
 // addr and returns a reference to it.
+//
+// The returned RPChan[T] will not start a client nor a server unless their
+// related methods are called, [RPChan.Send] and [RPChan.Receive], respectively.
 func New[T any](addr string, buf ...uint) *RPChan[T] {
 	var bufsize uint
 	if len(buf) > 0 {
