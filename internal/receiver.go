@@ -9,7 +9,7 @@ type Receiver[T any] struct {
 
 func NewReceiver[T any](buf uint) *Receiver[T] { return &Receiver[T]{make(chan *T, buf)} }
 
-// Push implements the function signature for an rpc handler.
+// Send implements the function signature for an rpc handler.
 func (r *Receiver[T]) Send(item *T, ok *bool) error {
 	var err error
 	defer func() {
