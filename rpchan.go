@@ -20,24 +20,21 @@ type RPChan[T any] struct {
 	receiver *internal.Receiver[T]
 }
 
-// Send imitates a Go channels' send operation, but on an [RPChan].
+// Send imitates a Go channels' send operation.
 //
-//	ch <- "value"
-//	err := rpchan.Send("value")
-//
-// Since Send involves a network call, it can return an error.
 // A call to Send, much like sending over a Go channel, may block.
+// The first call to Send may panic on dialing the TCP address of the RPChan.
+//
+// Since this involves a network call, Send can return an error.
 func (ch *RPChan[T]) Send(v any) error {
 	ch.setupC()
 	return ch.client.Call("Channel.Send", v, nil)
 }
 
-// Receive imitates a Go channels' receive operation, but on an [RPChan].
-//
-//	v, ok := <- ch
-//	v, ok = rpchan.Receive()
+// Receive imitates a Go channels' receive operation.
 //
 // A call to Receive, much like receiving over a Go channel, may block.
+// The first call to Receive may panic on listening on the TCP address of RPChan.
 func (ch *RPChan[T]) Receive() (*T, bool) {
 	ch.setupR()
 	v, ok := <-ch.receiver.Channel
