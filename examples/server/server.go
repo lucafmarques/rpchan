@@ -20,9 +20,4 @@ func main() {
 			return
 		}
 	}
-
-	// unreacheable code to represent hwo you could use ch.Iter()
-	for v := range ch.Iter() {
-		fmt.Printf("%+v\n", v)
-	}
 }

@@ -39,19 +39,9 @@ func (ch *RPChan[T]) Send(v any) error {
 //
 // A call to Receive, much like receiving over a Go channel, may block.
 func (ch *RPChan[T]) Receive() (*T, bool) {
-	v, ok := <-ch.Iter()
-	return v, ok
-}
-
-// Iter returns the underlying channel of type *T.
-// Iter is a convenience method for iteration over an [RPChan].
-//
-//	for v := range rpchan.Iter() {
-//		doSomething(v)
-//	}
-func (ch *RPChan[T]) Iter() <-chan *T {
 	ch.setupR()
-	return ch.receiver.Channel
+	v, ok := <-ch.receiver.Channel
+	return v, ok
 }
 
 // Close imitates a close() call on a normal Go channel.
@@ -70,15 +60,15 @@ func (ch *RPChan[T]) Close() error {
 	return errors.Join(errs...)
 }
 
-// New creates an RPChan[T], with an optional bufferSize, over
+// New creates an RPChan[T], with an optional N buffer size, over
 // addr and returns a reference to it.
 //
 // The returned RPChan[T] will not start a client nor a server unless their
 // related methods are called, [RPChan.Send] and [RPChan.Receive], respectively.
-func New[T any](addr string, buf ...uint) *RPChan[T] {
+func New[T any](addr string, n ...uint) *RPChan[T] {
 	var bufsize uint
-	if len(buf) > 0 {
-		bufsize = buf[0]
+	if len(n) > 0 {
+		bufsize = n[0]
 	}
 
 	ch := &RPChan[T]{addr: addr}
@@ -105,8 +95,7 @@ func New[T any](addr string, buf ...uint) *RPChan[T] {
 			close(rec.Channel)
 		}()
 
-		ch.receiver = rec
-		ch.listener = &list
+		ch.receiver, ch.listener = rec, &list
 	})
 
 	return ch
