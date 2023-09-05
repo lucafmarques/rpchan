@@ -2,6 +2,7 @@
 package rpchan
 
 import (
+	"errors"
 	"net"
 	"net/rpc"
 	"sync"
@@ -15,6 +16,7 @@ type RPChan[T any] struct {
 	setupC   func()
 	setupR   func()
 	client   *rpc.Client
+	listener *net.Listener
 	receiver *internal.Receiver[T]
 }
 
@@ -49,7 +51,23 @@ func (ch *RPChan[T]) Receive() (*T, bool) {
 //	}
 func (ch *RPChan[T]) Iter() <-chan *T {
 	ch.setupR()
-	return ch.receiver.Channel()
+	return ch.receiver.Channel
+}
+
+// Close imitates a close() call on a normal Go channel.
+// Since closing involves I/O, it can return an error containing
+// the RPC client's Close() error and/or the TCP listener Close() error.
+func (ch *RPChan[T]) Close() error {
+	var errs []error
+
+	if ch.client != nil {
+		errs = append(errs, ch.client.Close())
+	}
+	if ch.listener != nil {
+		errs = append(errs, (*(ch.listener)).Close())
+	}
+
+	return errors.Join(errs...)
 }
 
 // New creates an RPChan[T], with an optional bufferSize, over
@@ -84,10 +102,11 @@ func New[T any](addr string, buf ...uint) *RPChan[T] {
 
 		go func() {
 			srv.Accept(list)
-			rec.Close()
+			close(rec.Channel)
 		}()
 
 		ch.receiver = rec
+		ch.listener = &list
 	})
 
 	return ch
