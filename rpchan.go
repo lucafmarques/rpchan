@@ -41,7 +41,7 @@ func (ch *RPChan[T]) Receive() (*T, bool) {
 	return v, ok
 }
 
-// Listen implements GOEXPERIMENT=rangefunc iterator semantics
+// Listen implements a GOEXPERIMENT=rangefunc iterator.
 //
 // When used in a for-range loop it works exacly like a Go channel.
 func (ch *RPChan[T]) Listen() func(func(T) bool) {
@@ -74,7 +74,7 @@ func (ch *RPChan[T]) Close() error {
 	return errors.Join(errs...)
 }
 
-// New creates an RPChan[T],  over addr, with an optional N buffer size, and
+// New creates an RPChan[T] over addr, with an optional N buffer size, and
 // returns a reference to it.
 //
 // The returned RPChan[T] will not start a client nor a server unless their

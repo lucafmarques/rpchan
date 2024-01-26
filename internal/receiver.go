@@ -23,7 +23,7 @@ func (r *Receiver[T]) Send(item *T, _ *bool) error {
 	return err
 }
 
-// Close implements the function signature for an RPC hanlder.
+// Close implements the function signature for an RPC handler.
 // It handles a client closing the communication over the rpchan.
 func (r *Receiver[T]) Close(_ int, _ *bool) error {
 	close(r.Channel)
