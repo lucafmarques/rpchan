@@ -26,7 +26,7 @@ type RPChan[T any] struct {
 // The first call to Send may panic on dialing the TCP address of the RPChan.
 //
 // Since this involves a network call, Send can return an error.
-func (ch *RPChan[T]) Send(v any) error {
+func (ch *RPChan[T]) Send(v T) error {
 	ch.setupC()
 	return ch.client.Call("Channel.Send", v, nil)
 }
