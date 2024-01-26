@@ -20,7 +20,7 @@ type RPChan[T any] struct {
 	receiver *internal.Receiver[T]
 }
 
-// Send imitates a Go channels' send operation.
+// Send implements Go channels' send operation.
 //
 // A call to Send, much like sending over a Go channel, may block.
 // The first call to Send may panic on dialing the TCP address of the RPChan.
@@ -31,7 +31,7 @@ func (ch *RPChan[T]) Send(v T) error {
 	return ch.client.Call("Channel.Send", v, nil)
 }
 
-// Receive imitates a Go channels' receive operation.
+// Receive implements Go channels' receive operation.
 //
 // A call to Receive, much like receiving over a Go channel, may block.
 // The first call to Receive may panic on listening on the TCP address of RPChan.
@@ -54,7 +54,7 @@ func (ch *RPChan[T]) Listen() func(func(T) bool) {
 	}
 }
 
-// Close imitates a close() call on a normal Go channel.
+// Close implements the close built-in.
 // Since closing involves I/O, it can return an error containing
 // the RPC client's Close() error and/or the TCP listener Close() error.
 func (ch *RPChan[T]) Close() error {
@@ -78,7 +78,7 @@ func (ch *RPChan[T]) Close() error {
 // returns a reference to it.
 //
 // The returned RPChan[T] will not start a client nor a server unless their
-// related methods are called, [RPChan.Send] and [RPChan.Receive], respectively.
+// related methods are called, [RPChan.Send] and [RPChan.Receive] or [RPChan.Listen], respectively.
 func New[T any](addr string, n ...uint) *RPChan[T] {
 	var bufsize uint
 	if len(n) > 0 {
