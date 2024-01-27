@@ -35,7 +35,7 @@ func (ch *RPChan[T]) Send(v T) error {
 //
 // A call to Receive, much like receiving over a Go channel, may block.
 // The first call to Receive may panic on listening on the TCP address of RPChan.
-func (ch *RPChan[T]) Receive() (*T, bool) {
+func (ch *RPChan[T]) Receive() (T, bool) {
 	ch.setupR()
 	v, ok := <-ch.receiver.Channel
 	return v, ok
@@ -44,8 +44,8 @@ func (ch *RPChan[T]) Receive() (*T, bool) {
 // Listen implements a GOEXPERIMENT=rangefunc iterator.
 //
 // When used in a for-range loop it works exacly like a Go channel.
-func (ch *RPChan[T]) Listen() func(func(*T) bool) {
-	return func(yield func(*T) bool) {
+func (ch *RPChan[T]) Listen() func(func(T) bool) {
+	return func(yield func(T) bool) {
 		for {
 			if v, ok := ch.Receive(); !ok || !yield(v) {
 				return
