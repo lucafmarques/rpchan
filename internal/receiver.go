@@ -10,7 +10,7 @@ type Receiver[T any] struct {
 func NewReceiver[T any](buf uint) *Receiver[T] { return &Receiver[T]{make(chan *T, buf)} }
 
 // Send implements the function signature for an RPC handler.
-func (r *Receiver[T]) Send(item *T, ok *bool) error {
+func (r *Receiver[T]) Send(item *T, _ *bool) error {
 	var err error
 	defer func() {
 		recover()
@@ -21,4 +21,11 @@ func (r *Receiver[T]) Send(item *T, ok *bool) error {
 	r.Channel <- item
 
 	return err
+}
+
+// Close implements the function signature for an RPC handler.
+// It handles a client closing the communication over the rpchan.
+func (r *Receiver[T]) Close(_ int, _ *bool) error {
+	close(r.Channel)
+	return nil
 }

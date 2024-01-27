@@ -13,11 +13,7 @@ type T struct {
 
 func main() {
 	ch := rpchan.New[T](":9091", 100)
-	for {
-		v, ok := ch.Receive()
-		fmt.Printf("%+v - %v\n", v, ok)
-		if !ok {
-			return
-		}
+	for v := range ch.Listen() {
+		fmt.Printf("%+v - %v\n", v)
 	}
 }
