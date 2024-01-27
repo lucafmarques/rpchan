@@ -18,6 +18,6 @@ func main() {
 		C: "string",
 	}
 	ch := rpchan.New[T](":9091")
-	fmt.Println(ch.Send(&t))
+	fmt.Println(ch.Send(t))
 	fmt.Println(ch.Close())
 }
