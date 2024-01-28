@@ -4,9 +4,19 @@
 
 `rpchan` implements some of Go's channel semantics over a TCP connection using `net/rpc`.
 
-It achieves this by providing a very minimal API on the `RPChan` type, exposing four methods: `Send`, `Receive`, [`Listen`](#rangefunc) and `Close`. Those four methods are enough to mimic one-way send/receive channel-like semantics.
+```
+go get github.com/lucafmarques/rpchan
+```
 
-It is advisable, but not mandatory, to use the same type on both the receiver and sender. This is because the types follow the [`encoding/gob` guidelines for types and values](https://pkg.go.dev/encoding/gob#hdr-Types_and_Values).
+It achieves this by providing a minimal API on the `RPChan[T any]` type: 
+- Use [`Send`](https://pkg.go.dev/github.com/lucafmarques/rpchan#RPChan.Send) if you want to send a `T`, similarly to `ch <- T`
+- Use [`Receive`](https://pkg.go.dev/github.com/lucafmarques/rpchan#RPChan.Receive) if you want to receive a `T`, like `<-ch`
+- Use [`Close`](https://pkg.go.dev/github.com/lucafmarques/rpchan#RPChan.Close) if you want to close the channel, like `close(ch)`
+- Use [`Listen`](#rangefunc) if want to iterate on the channel, like `for v := range ch`
+
+Those four methods are enough to mimic one-way send/receive channel-like semantics.
+
+It's advisable, but not mandatory, to use the same type on both the receiver and sender. This is because `rpchan` follows the [`encoding/gob`](https://pkg.go.dev/encoding/gob#hdr-Types_and_Values) guidelines for encoding types and values.
 
 ## Examples
 <table>
@@ -55,3 +65,7 @@ func main() {
 
 ## rangefunc
 If built with Go 1.22 and `GOEXPERIMENT=rangefunc`, the `Listen` method can be used on a for-range loop, working exactly like a Go channel would.
+
+---
+
+README.md heavily inspired by [`sourcegraph/conc`](https://github.com/sourcegraph/conc)
