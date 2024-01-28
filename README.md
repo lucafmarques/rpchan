@@ -21,15 +21,15 @@ It is advisable, but not mandatory, to use the same type on both the receiver an
 package main
 
 import (
-	"github.com/lucafmarques/rpchan"
+    "github.com/lucafmarques/rpchan"
 )
 
 func main() {
-	ch := rpchan.New[int](":9091")
-	err := ch.Send(20)
-	// error handling because of
-	// the required network call
-	err = ch.Close()
+    ch := rpchan.New[int](":9091")
+    err := ch.Send(20)
+    // error handling because of
+    // the required network call
+    err = ch.Close()
 }
 ```
 </td>
@@ -39,14 +39,14 @@ func main() {
 package main
 
 import (
-	"github.com/lucafmarques/rpchan"
+    "github.com/lucafmarques/rpchan"
 )
 
 func main() {
-	ch := rpchan.New[int](":9091", 100)
-	for v := range ch.Listen() {
-		// ...
-	}
+    ch := rpchan.New[int](":9091", 100)
+    for v := range ch.Listen() {
+        // ...
+    }
 }
 ```
 </td>
