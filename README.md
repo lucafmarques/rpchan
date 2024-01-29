@@ -21,11 +21,12 @@ It is advisable, but not mandatory, to use the same type on both the receiver an
 package main
 
 import (
+    "time"
     "github.com/lucafmarques/rpchan"
 )
 
 func main() {
-    ch := rpchan.New[int](":9091")
+    ch := rpchan.New[int](":9091", 0*time.Second)
     err := ch.Send(20)
     // error handling because of
     // the required network call
@@ -39,11 +40,12 @@ func main() {
 package main
 
 import (
+    "time"
     "github.com/lucafmarques/rpchan"
 )
 
 func main() {
-    ch := rpchan.New[int](":9091", 100)
+    ch := rpchan.New[int](":9091", 30*time.Second, 100)
     for v := range ch.Listen() {
         // ...
     }
