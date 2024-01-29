@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/rpc"
 	"sync"
+	"time"
 
 	"github.com/lucafmarques/rpchan/internal"
 )
@@ -13,7 +14,7 @@ import (
 // RPChan
 type RPChan[T any] struct {
 	addr     string
-	setupC   func()
+	setupC   func() error
 	setupR   func()
 	client   *rpc.Client
 	listener *net.Listener
@@ -27,7 +28,9 @@ type RPChan[T any] struct {
 //
 // Since this involves a network call, Send can return an error.
 func (ch *RPChan[T]) Send(v T) error {
-	ch.setupC()
+	if err := ch.setupC(); err != nil {
+		return err
+	}
 	return ch.client.Call("Channel.Send", v, nil)
 }
 
@@ -79,20 +82,21 @@ func (ch *RPChan[T]) Close() error {
 //
 // The returned RPChan[T] will not start a client nor a server unless their
 // related methods are called, [RPChan.Send] and [RPChan.Receive] or [RPChan.Listen], respectively.
-func New[T any](addr string, n ...uint) *RPChan[T] {
+func New[T any](addr string, timeout time.Duration, n ...uint) *RPChan[T] {
 	var bufsize uint
 	if len(n) > 0 {
 		bufsize = n[0]
 	}
 
 	ch := &RPChan[T]{addr: addr}
-	ch.setupC = sync.OnceFunc(func() {
-		cli, err := rpc.Dial("tcp", addr)
+	ch.setupC = sync.OnceValue(func() error {
+		conn, err := net.DialTimeout("tcp", addr, timeout)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
-		ch.client = cli
+		ch.client = rpc.NewClient(conn)
+		return nil
 	})
 	ch.setupR = sync.OnceFunc(func() {
 		srv := rpc.NewServer()
