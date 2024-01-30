@@ -1,4 +1,4 @@
-// Package rpchan implements Go's channel semantics over a TCP connection using net/rpc.
+// Package provides channel-like semantics over a TCP connection using net/rpc.
 package rpchan
 
 import (
