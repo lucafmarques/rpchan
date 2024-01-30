@@ -30,15 +30,12 @@ It's advisable, but not mandatory, to use the same type on both the receiver and
 ```go
 package main
 
-import (
-    "github.com/lucafmarques/rpchan"
-)
+import "github.com/lucafmarques/rpchan"
 
 func main() {
     ch := rpchan.New[int](":9091")
     err := ch.Send(20)
-    // error handling because of
-    // the required network call
+    // ... error handling
     err = ch.Close()
 }
 ```
@@ -48,14 +45,12 @@ func main() {
 ```go
 package main
 
-import (
-    "github.com/lucafmarques/rpchan"
-)
+import "github.com/lucafmarques/rpchan"
 
 func main() {
     ch := rpchan.New[int](":9091", 100)
     for v := range ch.Listen() {
-        // ...
+        // ... do things with v
     }
 }
 ```
@@ -68,4 +63,4 @@ If built with Go 1.22 and `GOEXPERIMENT=rangefunc`, the `Listen` method can be u
 
 ---
 
-README.md heavily inspired by [`sourcegraph/conc`](https://github.com/sourcegraph/conc)
+README.md inspired by [`sourcegraph/conc`](https://github.com/sourcegraph/conc)
