@@ -5,16 +5,14 @@ import (
 	"errors"
 	"net"
 	"net/rpc"
-	"sync"
 
 	"github.com/lucafmarques/rpchan/internal"
 )
 
 // RPChan
 type RPChan[T any] struct {
-	addr     string
-	setupC   func()
-	setupR   func()
+	setupC   func() error
+	setupR   func() error
 	client   *rpc.Client
 	listener *net.Listener
 	receiver *internal.Receiver[T]
@@ -23,31 +21,43 @@ type RPChan[T any] struct {
 // Send implements Go channels' send operation.
 //
 // A call to Send, much like sending over a Go channel, may block.
-// The first call to Send may panic on dialing the TCP address of the RPChan.
+// The first call to Send may error on dialing the TCP address of the RPChan.
 //
 // Since this involves a network call, Send can return an error.
 func (ch *RPChan[T]) Send(v T) error {
-	ch.setupC()
+	if err := ch.setupC(); err != nil {
+		return err
+	}
+
 	return ch.client.Call("Channel.Send", v, nil)
 }
 
 // Receive implements Go channels' receive operation.
 //
 // A call to Receive, much like receiving over a Go channel, may block.
-// The first call to Receive may panic on listening on the TCP address of RPChan.
-func (ch *RPChan[T]) Receive() (T, bool) {
-	ch.setupR()
-	v, ok := <-ch.receiver.Channel
-	return v, ok
+// The first call to Receive may error on listening on the TCP address of RPChan.
+//
+// Since this may involve a network call, Receive can return an error.
+func (ch *RPChan[T]) Receive() (v T, err error) {
+	if err = ch.setupR(); err != nil {
+		return
+	}
+
+	r, ok := <-ch.receiver.Channel
+	if !ok {
+		return v, net.ErrClosed
+	}
+
+	return r, nil
 }
 
 // Listen implements a GOEXPERIMENT=rangefunc iterator.
 //
 // When used in a for-range loop it works exacly like a Go channel.
-func (ch *RPChan[T]) Listen() func(func(T) bool) {
-	return func(yield func(T) bool) {
+func (ch *RPChan[T]) Listen() func(func(T, error) bool) {
+	return func(yield func(T, error) bool) {
 		for {
-			if v, ok := ch.Receive(); !ok || !yield(v) {
+			if v, err := ch.Receive(); !yield(v, err) || err != nil {
 				return
 			}
 		}
@@ -55,6 +65,7 @@ func (ch *RPChan[T]) Listen() func(func(T) bool) {
 }
 
 // Close implements the close built-in.
+//
 // Since closing involves I/O, it can return an error containing
 // the RPC client's Close() error and/or the TCP listener Close() error.
 func (ch *RPChan[T]) Close() error {
@@ -62,55 +73,58 @@ func (ch *RPChan[T]) Close() error {
 
 	if ch.client != nil {
 		errs = append(errs, ch.client.Call("Channel.Close", 0, nil), ch.client.Close())
-
-	}
-	if ch.listener != nil {
-		errs = append(errs, (*(ch.listener)).Close())
 	}
 	if ch.receiver != nil {
-		close(ch.receiver.Channel)
+		errs = append(errs, (*(ch.listener)).Close())
 	}
 
 	return errors.Join(errs...)
 }
 
-// New creates an RPChan[T] over addr, with an optional N buffer size, and
-// returns a reference to it.
+// New creates an RPChan[T] over addr, with an optional buffer, and returns a reference to it.
 //
 // The returned RPChan[T] will not start a client nor a server unless their
 // related methods are called, [RPChan.Send] and [RPChan.Receive] or [RPChan.Listen], respectively.
-func New[T any](addr string, n ...uint) *RPChan[T] {
+func New[T any](addr string, buffer ...uint) *RPChan[T] {
 	var bufsize uint
-	if len(n) > 0 {
-		bufsize = n[0]
+	if len(buffer) > 0 {
+		bufsize = buffer[0]
 	}
 
-	ch := &RPChan[T]{addr: addr}
-	ch.setupC = sync.OnceFunc(func() {
-		cli, err := rpc.Dial("tcp", addr)
-		if err != nil {
-			panic(err)
+	ch := &RPChan[T]{}
+	ch.setupC = func() error {
+		if ch.client == nil {
+			conn, err := net.Dial("tcp", addr)
+			if err != nil {
+				return err
+			}
+
+			ch.client = rpc.NewClient(conn)
 		}
 
-		ch.client = cli
-	})
-	ch.setupR = sync.OnceFunc(func() {
-		srv := rpc.NewServer()
-		rec := internal.NewReceiver[T](bufsize)
-		srv.RegisterName("Channel", rec)
+		return nil
+	}
+	ch.setupR = func() error {
+		if ch.receiver == nil {
+			srv := rpc.NewServer()
+			rec := internal.NewReceiver[T](bufsize)
+			srv.RegisterName("Channel", rec)
 
-		list, err := net.Listen("tcp", addr)
-		if err != nil {
-			panic(err)
+			list, err := net.Listen("tcp", addr)
+			if err != nil {
+				return err
+			}
+
+			go func() {
+				srv.Accept(list)
+				close(rec.Channel)
+			}()
+
+			ch.receiver, ch.listener = rec, &list
 		}
 
-		go func() {
-			srv.Accept(list)
-			close(rec.Channel)
-		}()
-
-		ch.receiver, ch.listener = rec, &list
-	})
+		return nil
+	}
 
 	return ch
 }

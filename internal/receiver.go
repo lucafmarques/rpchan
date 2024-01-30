@@ -1,6 +1,6 @@
 package internal
 
-import "errors"
+import "net"
 
 // Receiver needs to be exported to be used as an RPC handler.
 type Receiver[T any] struct {
@@ -15,11 +15,10 @@ func (r *Receiver[T]) Send(item T, _ *bool) error {
 	defer func() {
 		recover()
 		// safe to assume that we're recovering from a send on a closed channel
-		err = errors.New("queue is closed")
+		err = net.ErrClosed
 	}()
 
 	r.Channel <- item
-
 	return err
 }
 
