@@ -54,10 +54,10 @@ func (ch *RPChan[T]) Receive() (v T, err error) {
 // Listen implements a GOEXPERIMENT=rangefunc iterator.
 //
 // When used in a for-range loop it works exacly like a Go channel.
-func (ch *RPChan[T]) Listen() func(func(T) bool) {
-	return func(yield func(T) bool) {
+func (ch *RPChan[T]) Listen() func(func(T, error) bool) {
+	return func(yield func(T, error) bool) {
 		for {
-			if v, err := ch.Receive(); err != nil || !yield(v) {
+			if v, err := ch.Receive(); !yield(v, err) || err != nil {
 				return
 			}
 		}
