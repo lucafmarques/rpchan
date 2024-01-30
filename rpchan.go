@@ -75,7 +75,7 @@ func (ch *RPChan[T]) Close() error {
 		errs = append(errs, ch.client.Call("Channel.Close", 0, nil), ch.client.Close())
 	}
 	if ch.receiver != nil {
-		errs = append(errs, (*(ch.listener)).Close())
+		errs = append(errs, (*(ch.listener)).Close(), ch.receiver.Close(0, nil))
 	}
 
 	return errors.Join(errs...)
@@ -115,10 +115,7 @@ func New[T any](addr string, buffer ...uint) *RPChan[T] {
 				return err
 			}
 
-			go func() {
-				srv.Accept(list)
-				close(rec.Channel)
-			}()
+			go srv.Accept(list)
 
 			ch.receiver, ch.listener = rec, &list
 		}
