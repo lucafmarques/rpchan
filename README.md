@@ -2,7 +2,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/lucafmarques/rpchan.svg)](https://pkg.go.dev/github.com/lucafmarques/rpchan)
 [![Go Report Card](https://goreportcard.com/badge/github.com/lucafmarques/rpchan)](https://goreportcard.com/report/github.com/lucafmarques/rpchan)
 
-`rpchan` implements some of Go's channel semantics over a TCP connection using `net/rpc`.
+`rpchan` provides channel-like semantics over a TCP connection using `net/rpc`.
 
 ```
 go get github.com/lucafmarques/rpchan
